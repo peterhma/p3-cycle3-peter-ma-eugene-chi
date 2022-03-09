@@ -27,11 +27,18 @@
   
   
   <script>
-    window.onload = function() {
 
+    
+    window.onload = function() {
       // click and drag to draw
+      function getRandomColor() {
+          return Math.floor(Math.random() * 16777215).toString(16);
+      }
+
+
       function basicDrawingTool(){
-        
+        var picked_color =  "#" + getRandomColor();
+        console.log(picked_color);
     		var tool = new paper.Tool();
     		var path;
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
@@ -39,7 +46,7 @@
     		// Define a mousedown and mousedrag handler
     		tool.onMouseDown = function(event) {
     			path = new paper.Path();
-    			path.strokeColor = 'black';
+    			path.strokeColor = picked_color;
     			path.add(event.point);
     		}
     
@@ -51,6 +58,7 @@
           
           var msg = {
             type: "point",
+            color: picked_color,
             x: event.point.x,
             y: event.point.y
           }
@@ -65,25 +73,27 @@
         
         // Establish websocket connection
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
+
         var path;
-        path = new paper.Path();
-        path.strokeColor = 'black';
         
         socket.onopen = function(){
           $("#status").append("[open] websocket connection opened")
           $("#status").append($("<br>"));
+          path = new paper.Path();
         }
         
+        
         socket.onmessage = function(message){
+          
           // Receive a message from websocket server
-         
-         
           if (message) {
               try {
                   var msg = JSON.parse(message.data);
+                  path.strokeColor = msg.color;
                   var point = new paper.Point(msg.x, msg.y);
                   path.add(point);
-                  console.log(msg.x + " " + msg.y);
+                  //console.log(msg.x + " " + msg.y);
+                      
               }
               catch(e) {
                   $("#status").append(`[receive] ${message.data}`);
