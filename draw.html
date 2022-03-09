@@ -27,12 +27,13 @@
   
   
   <script>
+    //---NEW---
     function getRandomColor() {
         return Math.floor(Math.random() * 16777215).toString(16);
     }
     var picked_color =  "#" + getRandomColor();
-    console.log(picked_color);
-    
+    //console.log(picked_color);
+    //---NEW---
     window.onload = function() {
       // click and drag to draw
     
@@ -43,6 +44,7 @@
     		var tool = new paper.Tool();
     		var path = new paper.Path();
         path.strokeColor = picked_color;
+        
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
     
     		// Define a mousedown and mousedrag handler
@@ -55,21 +57,24 @@
     		tool.onMouseDrag = function(event) {
     			path.add(event.point);
     		}
-        
+
+        //---NEW---
         tool.onMouseMove = function(event) {
-          
-    			
-          path.add(event.point);
-          
-          var msg = {
+          path.add(event.point); // draws locally
+
+          // package point info
+          var msg = { 
             type: "point",
             color: picked_color,
             x: event.point.x,
             y: event.point.y
           }
           
+          // broadcast points to other connected clients
           socket.send(JSON.stringify(msg));
         }
+        //---NEW---
+        
       }
 
       // type in chat and press enter for demo
@@ -78,36 +83,39 @@
         
         // Establish websocket connection
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
-
+      
         var path;
         path = new paper.Path();
+        
         socket.onopen = function(){
           $("#status").append("[open] websocket connection opened")
           $("#status").append($("<br>"));
           
         }
         
-        
         socket.onmessage = function(message){
           
           // Receive a message from websocket server
           if (message) {
+              //---NEW---
               try {
-                  var msg = JSON.parse(message.data);
+    
+                  // will throw error if NOT a point
+                  // NOTE: only points are packaged in a JSON object
+                  // connection and chat related messages are handled in catch
+                  var msg = JSON.parse(message.data); 
                   if (msg.color != picked_color) {
-                    path.strokeColor = msg.color;
+                    path.strokeColor = msg.color; // switches to the color of that client
                     var point = new paper.Point(msg.x, msg.y);
                     path.add(point);
-                  }
-                
-                  //console.log(msg.x + " " + msg.y);
-                      
+                  }   
               }
               catch(e) {
+                  // regular connetion or chat message. Just print out
                   $("#status").append(`[receive] ${message.data}`);
                   $("#status").append($("<br>"));
               }
-             
+             //--NEW---
           }
         }
         
