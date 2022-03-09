@@ -27,20 +27,22 @@
   
   
   <script>
-
+    function getRandomColor() {
+        return Math.floor(Math.random() * 16777215).toString(16);
+    }
+    var picked_color =  "#" + getRandomColor();
+    console.log(picked_color);
     
     window.onload = function() {
       // click and drag to draw
-      function getRandomColor() {
-          return Math.floor(Math.random() * 16777215).toString(16);
-      }
+    
 
 
       function basicDrawingTool(){
-        var picked_color =  "#" + getRandomColor();
-        console.log(picked_color);
+     
     		var tool = new paper.Tool();
-    		var path;
+    		var path = new paper.Path();
+        path.strokeColor = picked_color;
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
     
     		// Define a mousedown and mousedrag handler
@@ -55,6 +57,9 @@
     		}
         
         tool.onMouseMove = function(event) {
+          
+    			
+          path.add(event.point);
           
           var msg = {
             type: "point",
@@ -75,11 +80,11 @@
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
 
         var path;
-        
+        path = new paper.Path();
         socket.onopen = function(){
           $("#status").append("[open] websocket connection opened")
           $("#status").append($("<br>"));
-          path = new paper.Path();
+          
         }
         
         
@@ -89,9 +94,12 @@
           if (message) {
               try {
                   var msg = JSON.parse(message.data);
-                  path.strokeColor = msg.color;
-                  var point = new paper.Point(msg.x, msg.y);
-                  path.add(point);
+                  if (msg.color != picked_color) {
+                    path.strokeColor = msg.color;
+                    var point = new paper.Point(msg.x, msg.y);
+                    path.add(point);
+                  }
+                
                   //console.log(msg.x + " " + msg.y);
                       
               }
