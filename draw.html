@@ -34,6 +34,7 @@
         
     		var tool = new paper.Tool();
     		var path;
+        var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
     
     		// Define a mousedown and mousedrag handler
     		tool.onMouseDown = function(event) {
@@ -44,7 +45,18 @@
     
     		tool.onMouseDrag = function(event) {
     			path.add(event.point);
-    		}      
+    		}
+        
+        tool.onMouseMove = function(event) {
+          
+          var msg = {
+            type: "point",
+            x: event.point.x,
+            y: event.point.y
+          }
+          
+          socket.send(JSON.stringify(msg));
+        }
       }
 
       // type in chat and press enter for demo
@@ -53,6 +65,9 @@
         
         // Establish websocket connection
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
+        var path;
+        path = new paper.Path();
+        path.strokeColor = 'black';
         
         socket.onopen = function(){
           $("#status").append("[open] websocket connection opened")
@@ -61,8 +76,21 @@
         
         socket.onmessage = function(message){
           // Receive a message from websocket server
-          $("#status").append(`[receive] ${message.data}`);
-          $("#status").append($("<br>"));
+         
+         
+          if (message) {
+              try {
+                  var msg = JSON.parse(message.data);
+                  var point = new paper.Point(msg.x, msg.y);
+                  path.add(point);
+                  console.log(msg.x + " " + msg.y);
+              }
+              catch(e) {
+                  $("#status").append(`[receive] ${message.data}`);
+                  $("#status").append($("<br>"));
+              }
+             
+          }
         }
         
         socket.onclose = function(){
@@ -73,7 +101,7 @@
         // Event listeners
         $('#input').on("keypress", function(event){
           if (event.key === "Enter") {
-        
+            
               // Send a message from this browser window
               socket.send($('#input').val());
               $("#status").append(`[send] ${$('#input').val()}`);
