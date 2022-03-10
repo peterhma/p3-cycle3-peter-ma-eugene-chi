@@ -33,14 +33,23 @@
     }
     var picked_color =  "#" + getRandomColor();
     //console.log(picked_color);
+
+    // var screen;
+
+    // screen = '?size=small';
+    // large_started-= 1;
+
+  
+    // window.history.pushState('','',screen);
+    // var parameters = new URLSearchParams(window.location.search);
+    // console.log(parameters.toString());
+    
     //---NEW---
     window.onload = function() {
       // click and drag to draw
     
 
-
       function basicDrawingTool(){
-     
     		var tool = new paper.Tool();
     		var path = new paper.Path();
         path.strokeColor = picked_color;
@@ -74,9 +83,9 @@
           socket.send(JSON.stringify(msg));
         }
         //---NEW---
-        
       }
 
+      var usersMap = new Map();
       // type in chat and press enter for demo
       function basicWebsocketChat(){
           // The p4 starter code below is based on @MrEconomical (https://replit.com/@MrEconomical)'s ws-server-template example
@@ -84,27 +93,34 @@
         // Establish websocket connection
         var socket = new WebSocket("wss://ws-server-template.peterhma.repl.co", "very-good-protocol");
       
+  
         var path;
-        path = new paper.Path();
+        //path = new paper.Path();
+
+  
         
         socket.onopen = function(){
           $("#status").append("[open] websocket connection opened")
           $("#status").append($("<br>"));
-          
         }
         
         socket.onmessage = function(message){
-          
+       
           // Receive a message from websocket server
           if (message) {
               //---NEW---
               try {
-    
-                  // will throw error if NOT a point
-                  // NOTE: only points are packaged in a JSON object
-                  // connection and chat related messages are handled in catch
+
                   var msg = JSON.parse(message.data); 
-                  if (msg.color != picked_color) {
+                  var parameters = new URLSearchParams(window.location.search);
+                  if (parameters.toString() === 'size=large') {
+                    // if (!(msg.color in usersMap))
+                    if (!usersMap.has(msg.color))
+                    {
+                      usersMap.set(msg.color, new paper.Path());
+                    }
+                      
+                    path = usersMap.get(msg.color);
                     path.strokeColor = msg.color; // switches to the color of that client
                     var point = new paper.Point(msg.x, msg.y);
                     path.add(point);
