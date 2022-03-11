@@ -46,7 +46,50 @@
     
     //---NEW---
     window.onload = function() {
-      // click and drag to draw
+      
+     
+    var usersMap = new Map();  
+    function requestDeviceMotionPermission(){
+        DeviceOrientationEvent.requestPermission()
+        .then(response => {
+            if (response == 'granted') {
+                window.addEventListener('devicemotion', (e) => {
+                    
+                    if (e.acceleration.x < -25 || e.acceleration.x > 25) {
+                      //$("#status").append(`[receive] ${e.acceleration.x}`);
+                        paper.project.clear() 
+                       
+                    }
+                })
+            }
+        })
+        .catch(console.error)
+    }
+      
+    function requestDeviceOrientationPermission(){
+        DeviceOrientationEvent.requestPermission()
+        .then(response => {
+            if (response == 'granted') {
+                window.addEventListener('deviceorientation', (e) => {
+                    
+                    if (e.gamma > 80) {
+                      //$("#status").append(`[receive] ${e.gamma}`);
+                       var path = usersMap.get(picked_color);
+                        usersMap.delete(picked_color); // delete old color and old client name
+              
+                        picked_color = getRandomColor(); // generate new color
+                        usersMap.set(pickedColor, path);
+                        path.strokeColor = picked_color;
+                       
+                    }
+                })
+            }
+        })
+        .catch(console.error)
+    }
+    window.addEventListener('mousedown',requestDeviceOrientationPermission);
+    window.addEventListener('mousedown',requestDeviceMotionPermission);
+      
     
 
       function basicDrawingTool(){
@@ -61,6 +104,10 @@
     			path = new paper.Path();
     			path.strokeColor = picked_color;
     			path.add(event.point);
+
+          if (!usersMap.has(picked_color)) {
+            usersMap.set(picked_color, path);
+          }
     		}
     
     		tool.onMouseDrag = function(event) {
@@ -85,7 +132,7 @@
         //---NEW---
       }
 
-      var usersMap = new Map();
+  
       // type in chat and press enter for demo
       function basicWebsocketChat(){
           // The p4 starter code below is based on @MrEconomical (https://replit.com/@MrEconomical)'s ws-server-template example
